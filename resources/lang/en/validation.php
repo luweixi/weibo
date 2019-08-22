@@ -132,6 +132,9 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        // 'email' => [
+        //     'email' => '邮箱规则不合法啊啊啊啊啊啊啊啊！',
+        // ],
     ],
 
     /*
