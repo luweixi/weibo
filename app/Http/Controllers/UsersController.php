@@ -2,11 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class UsersController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth', [
+            'except' => ['show', 'create', 'store'],
+        ]);
+
+        $this->middleware('guest', [
+            'only' => ['create']
+        ]);
+    }
+
     public function create()
     {
         return view('users.create');
@@ -17,17 +28,17 @@ class UsersController extends Controller
         return view('users.show', compact('user'));
     }
 
-     public function store(Request $request)
+    public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|max:50',
-            'email' => 'required|email|unique:users|max:255',
-            'password' => 'required|confirmed|min:6'
+            'name'     => 'required|max:50',
+            'email'    => 'required|email|unique:users|max:255',
+            'password' => 'required|confirmed|min:6',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => bcrypt($request->password),
         ]);
 
@@ -38,20 +49,22 @@ class UsersController extends Controller
 
     public function edit(User $user)
     {
+        $this->authorize('update', $user);
         return view('users.edit', compact('user'));
     }
 
     public function update(User $user, Request $request)
     {
+        $this->authorize('update', $user);
         $this->validate($request, [
-            'name' => 'required|max:50',
-            'password' => 'nullable|confirmed|min:6'
+            'name'     => 'required|max:50',
+            'password' => 'nullable|confirmed|min:6',
         ]);
 
         $data = [
-            'name' => $request->name
+            'name' => $request->name,
         ];
-        if($request->password){
+        if ($request->password) {
             $data['password'] = bcrypt($request->password);
         }
         $user->update($data);
@@ -62,34 +75,3 @@ class UsersController extends Controller
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
