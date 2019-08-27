@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Auth;
 use Illuminate\Http\Request;
 
 class UsersController extends Controller
@@ -14,14 +15,14 @@ class UsersController extends Controller
         ]);
 
         $this->middleware('guest', [
-            'only' => ['create']
+            'only' => ['create'],
         ]);
     }
 
     public function index()
     {
         // $users = User::all();
-        $users = User::paginate(10);
+        $users = User::paginate(6);
         return view('users.index', compact('users'));
     }
 
@@ -80,5 +81,13 @@ class UsersController extends Controller
 
         return redirect()->route('users.show', $user);
 
+    }
+
+    public function destroy(User $user)
+    {
+        $this->authorize('destroy', $user);  //授权策略，只有管理员才能操作
+        $user->delete();
+        session()->flash('success', '成功删除用户！');
+        return back();
     }
 }
