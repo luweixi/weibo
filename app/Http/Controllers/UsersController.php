@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Auth;
 use Illuminate\Http\Request;
+use Mail;
 
 class UsersController extends Controller
 {
     public function __construct()
     {
+        //未登录用户访问权限
         $this->middleware('auth', [
-            'except' => ['show', 'create', 'store', 'index'],
+        'except' => ['show', 'create', 'store', 'index', 'confirmEmail'],
         ]);
 
+        //未登录用户访问特定页面
         $this->middleware('guest', [
             'only' => ['create'],
         ]);
@@ -50,9 +53,12 @@ class UsersController extends Controller
             'password' => bcrypt($request->password),
         ]);
 
-        Auth::login($user);
-        session()->flash('success', '欢迎，您将在这里开启一段新的旅程~');
-        return redirect()->route('users.show', [$user]);
+        // Auth::login($user);
+        $this->sendEmailConfirmationTo($user);
+        session()->flash('success', '激活邮件发送成功，请激活后重新登录~');
+        // return redirect()->route('users.show', [$user]);
+        return redirect()->route('home');
+
     }
 
     public function edit(User $user)
@@ -76,18 +82,43 @@ class UsersController extends Controller
             $data['password'] = bcrypt($request->password);
         }
         $user->update($data);
-
         session()->flash('success', '个人资料更新成功！');
-
-        return redirect()->route('users.show', $user);
+        return redirect()->route('users.show', [$user]);
 
     }
 
     public function destroy(User $user)
     {
-        $this->authorize('destroy', $user);  //授权策略，只有管理员才能操作
+        $this->authorize('destroy', $user); //授权策略，只有管理员才能操作
         $user->delete();
         session()->flash('success', '成功删除用户！');
         return back();
+    }
+
+    public function confirmEmail($token)
+    {
+        //firstOrFail, 会处理查询失败的情形，直接404
+        $user = User::where('activation_token', $token)->firstOrFail();
+        $user->activated = true;
+        $user->activation_token = null;
+        $user->save();
+
+        Auth::login($user);
+        session()->flash('success', '恭喜你，激活成功！');
+        return redirect()->route('users.show', compact('user'));
+    }
+
+    protected function sendEmailConfirmationTo($user)
+    {
+        $view    = 'emails.confirm';
+        $data    = compact('user');
+        $from    = '2210455042@qq.com';
+        $name    = 'Kim';
+        $to      = $user->email;
+        $subject = '感谢注册 Weibo 应用！请确认你的邮箱。';
+
+        Mail::send($view, $data, function ($message) use ($from, $name, $to, $subject) {
+            $message->from($from, $name)->to($to)->subject($subject);
+        });
     }
 }
