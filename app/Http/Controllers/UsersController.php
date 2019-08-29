@@ -101,6 +101,7 @@ class UsersController extends Controller
         $user = User::where('activation_token', $token)->firstOrFail();
         $user->activated = true;
         $user->activation_token = null;
+        $user->email_verified_at = now();
         $user->save();
 
         Auth::login($user);
