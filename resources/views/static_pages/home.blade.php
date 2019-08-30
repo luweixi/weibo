@@ -10,6 +10,8 @@
         <section class="status_form">
           @include('shared._status_form')
         </section>
+        <hr>
+        @include('shared._feed')
       </div>
       <aside class="col-md-4">
         <section class="user_info">
