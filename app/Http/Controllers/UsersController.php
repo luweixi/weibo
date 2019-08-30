@@ -13,7 +13,7 @@ class UsersController extends Controller
     {
         //未登录用户访问权限
         $this->middleware('auth', [
-        'except' => ['show', 'create', 'store', 'index', 'confirmEmail'],
+            'except' => ['show', 'create', 'store', 'index', 'confirmEmail'],
         ]);
 
         //未登录用户访问特定页面
@@ -36,7 +36,11 @@ class UsersController extends Controller
 
     public function show(User $user)
     {
-        return view('users.show', compact('user'));
+        $statuses = $user->statuses()
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(5);
+
+        return view('users.show', compact('user', 'statuses'));
     }
 
     public function store(Request $request)
@@ -98,9 +102,9 @@ class UsersController extends Controller
     public function confirmEmail($token)
     {
         //firstOrFail, 会处理查询失败的情形，直接404
-        $user = User::where('activation_token', $token)->firstOrFail();
-        $user->activated = true;
-        $user->activation_token = null;
+        $user                    = User::where('activation_token', $token)->firstOrFail();
+        $user->activated         = true;
+        $user->activation_token  = null;
         $user->email_verified_at = now();
         $user->save();
 
@@ -111,8 +115,8 @@ class UsersController extends Controller
 
     protected function sendEmailConfirmationTo($user)
     {
-        $view    = 'emails.confirm';
-        $data    = compact('user');
+        $view = 'emails.confirm';
+        $data = compact('user');
         // $from    = '2210455042@qq.com';
         // $name    = 'Kim';
         $to      = $user->email;
@@ -123,7 +127,7 @@ class UsersController extends Controller
         // });
 
         //$form,$name 从.env配置里读取
-         Mail::send($view, $data, function ($message) use ($to, $subject) {
+        Mail::send($view, $data, function ($message) use ($to, $subject) {
             $message->to($to)->subject($subject);
         });
     }
