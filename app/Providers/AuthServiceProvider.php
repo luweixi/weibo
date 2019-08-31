@@ -23,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        //授权策略自动注册
         $this->registerPolicies();
         Gate::guessPolicyNamesUsing(function($modelClass){
             return 'App\Policies\\'.class_basename($modelClass).'Policy';
