@@ -122,12 +122,16 @@ class User extends Authenticatable
 
     /**
      * 是否关注过指定的用户
+     *  // 1. $this->followings() 返回的是一个 HasMany 对象(Relations)
+        // 2. $this->followings 返回的是一个 Collection 集合
+        // 3. 第2个其实相当于这样 $this->followings()->get()
+        // 如果不需要条件直接使用 2 那样，写起来更短
      * @param  [type]  $user_id [description]
      * @return boolean          [description]
      */
     public function isFollowing($user_id)
     {
-        $this->followings()->contains($user_id);
+        return $this->followings->contains($user_id);
     }
 
 }
