@@ -43,6 +43,10 @@ class User extends Authenticatable
         return "http://www.gravatar.com/avatar/$hash?s=$size";
     }
 
+    /**
+     * 监听模型创建前事件
+     * @return [type] [description]
+     */
     public static function boot()
     {
         parent::boot();
@@ -51,14 +55,79 @@ class User extends Authenticatable
         });
     }
 
+    /**
+     * 关联用户状态表
+     * @return [type] [description]
+     */
     public function statuses()
     {
+        //一对多关系
         return $this->hasMany(Status::class);
     }
 
+    /**
+     * 取出用户状态表数据，并排序
+     * @return [type] [description]
+     */
     public function feed()
     {
         return $this->statuses()->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * 粉丝列表, 被关注人(user_id)->粉丝(follower_id)
+     * @return [type] [description]
+     */
+    public function followers()
+    {
+        //多对多关系
+        return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
+    }
+
+    /**
+     * 关注列表，粉丝身份(follower_id)->被关注人(user_id)
+     * @return [type] [description]
+     */
+    public function followings()
+    {
+        //多对多关系
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id');
+    }
+
+    /**
+     * 关注
+     * @param  [type] $user_ids [description]
+     * @return [type]           [description]
+     */
+    public function follow($user_ids)
+    {
+        if (!is_array($user_ids)) {
+            $user_ids = compact('user_ids');
+        }
+        $this->followings()->sync($user_ids, false); //false-合并操作, true-替换操作
+    }
+
+    /**
+     * 取消关注
+     * @param  [type] $user_ids [description]
+     * @return [type]           [description]
+     */
+    public function unfollow($user_ids)
+    {
+        if (!is_array($user_ids)) {
+            $user_ids = compact('user_ids');
+        }
+        $this->followings()->detach($user_ids);
+    }
+
+    /**
+     * 是否关注过指定的用户
+     * @param  [type]  $user_id [description]
+     * @return boolean          [description]
+     */
+    public function isFollowing($user_id)
+    {
+        $this->followings()->contains($user_id);
     }
 
 }
