@@ -66,12 +66,17 @@ class User extends Authenticatable
     }
 
     /**
-     * 取出用户状态表数据，并排序
+     * 取出用户动态流数据，并排序
      * @return [type] [description]
      */
     public function feed()
     {
-        return $this->statuses()->orderBy('created_at', 'desc');
+        // return $this->statuses()->orderBy('created_at', 'desc');
+        $user_ids = $this->followings->pluck('id')->toArray();
+        array_push($user_ids, $this->id);
+        return Status::whereIn('user_id', $user_ids)
+                              ->with('user')    //模型关联预加载，避免了N+1查找的问题
+                              ->orderBy('created_at', 'desc');
     }
 
     /**
